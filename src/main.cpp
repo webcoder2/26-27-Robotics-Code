@@ -149,7 +149,18 @@ void competition_initialize() {}
  * will be stopped. Re-enabling the robot will restart the task, not re-start it
  * from where it left off.
  */
-void autonomous() {}
+void autonomous() {
+        chassis.setPose(-62, -7, 90);
+        chassis.moveToPose(-48, -7, 90, 2000);
+        slideMotor.move_relative(1000, 600);
+        pros::delay(1000);
+        chassis.turnToHeading(180, 1000);
+        chassis.moveToPose(-48, -14, 180, 2000,{},false);
+        slideMotor.move_relative(-1000, 600);
+        pros::delay(1000);
+        clawMotor.move_relative(-500, 600);
+        pros::delay(1000);
+}
 
 /**
  * Runs the operator control code. This function will be started in its own task
