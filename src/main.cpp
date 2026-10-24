@@ -1,11 +1,12 @@
 #include "main.h"
 #include "lemlib/api.hpp" // IWYU pragma: keep
+#include "pros/misc.hpp"
 
-pros::Motor slideMotor(12);
-pros::Motor clawMotor(13);
-
-pros::MotorGroup left_motors({1, 2, 3}); // left motors on ports 1, 2, 3
-pros::MotorGroup right_motors({-4, -5, -6}); // right motors on ports 4, 5, 6
+pros::MotorGroup slideMotor({2,-11});
+pros::Motor clawMotor(-15);
+int autonNumber = 0;
+pros::MotorGroup left_motors({-7,-8,-10}); // left motors on ports 1, 2, 3
+pros::MotorGroup right_motors({3, 4, 5}); // right motors on ports 4, 5, 6
 pros::Controller controller(pros::E_CONTROLLER_MASTER);
 lemlib::Drivetrain drivetrain(&left_motors, // left motor group
                               &right_motors, // right motor group
@@ -15,7 +16,7 @@ lemlib::Drivetrain drivetrain(&left_motors, // left motor group
                               2 // horizontal drift is 2 (for now)
 );
 //Sensors
-pros::Imu imu(10);
+pros::Imu imu(14);
 lemlib::OdomSensors sensors(nullptr,//&vertical_tracking_wheel, // vertical tracking wheel 1, set to null
                             nullptr, // vertical tracking wheel 2, set to nullptr as we are using IMEs
                             nullptr,//&horizontal_tracking_wheel, // horizontal tracking wheel 1
@@ -46,13 +47,13 @@ lemlib::ControllerSettings angular_controller(2, // proportional gain (kP)
                                               0 // maximum acceleration (slew)
 );
 // input curve for throttle input during driver control
-lemlib::ExpoDriveCurve throttle_curve(5, // joystick deadband out of 127
+lemlib::ExpoDriveCurve throttle_curve(10, // joystick deadband out of 127
                                      10, // minimum output where drivetrain will move out of 127
                                      1.019 // expo curve gain
 );
 
 // input curve for steer input during driver control
-lemlib::ExpoDriveCurve steer_curve(5, // joystick deadband out of 127
+lemlib::ExpoDriveCurve steer_curve(10, // joystick deadband out of 127
                                   10, // minimum output where drivetrain will move out of 127
                                   1.019 // expo curve gain
 );
@@ -91,29 +92,34 @@ void on_center_button() {
 void initialize() {
 	pros::lcd::initialize();
         slideMotor.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+        //clawMotor.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+        //clawMotor.move_relative(-500, 600);     
         chassis.calibrate();
 	pros::lcd::set_text(1, "Hello PROS User!");
 	pros::lcd::register_btn1_cb(on_center_button);
         pros:: Task slides([&]() {
                 while(1){
-                        if(controller.get_digital(pros::E_CONTROLLER_DIGITAL_L1)){
-                                slideMotor.move(127);
-                        }
-                        else if(controller.get_digital(pros::E_CONTROLLER_DIGITAL_L2)){
-                                slideMotor.move(-127);
-                        }
-                        else{
-                                slideMotor.move_velocity(0);
-                        }
-                        if(controller.get_digital(pros::E_CONTROLLER_DIGITAL_R1)){
-                                clawMotor.move(127);
-                        }
-                        else if(controller.get_digital(pros::E_CONTROLLER_DIGITAL_R2)){
-                                clawMotor.move_relative(-500, 600);
-                                pros::delay(1000);
-                        }
-                        else{
-                                clawMotor.move(0);
+                        if(!pros::competition::is_autonomous()){
+                        
+                                if(controller.get_digital(pros::E_CONTROLLER_DIGITAL_L1)){
+                                        slideMotor.move(127);
+                                }
+                                else if(controller.get_digital(pros::E_CONTROLLER_DIGITAL_L2)){
+                                        slideMotor.move(-127);
+                                }
+                                else{
+                                        slideMotor.move_velocity(0);
+                                }
+                                if(controller.get_digital(pros::E_CONTROLLER_DIGITAL_R1)){
+                                        clawMotor.move(127);
+                                }
+                                else if(controller.get_digital(pros::E_CONTROLLER_DIGITAL_R2)){
+                                        clawMotor.move_relative(-1000, 600);
+                                        pros::delay(600);
+                                }
+                                else{
+                                        clawMotor.move(0);
+                                }
                         }
                         pros::delay(20);
                 }
@@ -150,16 +156,26 @@ void competition_initialize() {}
  * from where it left off.
  */
 void autonomous() {
-        chassis.setPose(-62, -7, 90);
-        chassis.moveToPose(-48, -7, 90, 2000);
-        slideMotor.move_relative(1000, 600);
-        pros::delay(1000);
-        chassis.turnToHeading(180, 1000);
-        chassis.moveToPose(-48, -14, 180, 2000,{},false);
-        slideMotor.move_relative(-1000, 600);
-        pros::delay(1000);
-        clawMotor.move_relative(-500, 600);
-        pros::delay(1000);
+        if(autonNumber == 0){
+                chassis.setPose(-62, -7, 90);
+                clawMotor.move_relative(10000, 600);
+                chassis.moveToPose(-44, -7, 90, 2000);
+                slideMotor.move_relative(10000, 600);
+                pros::delay(1000);
+                chassis.turnToHeading(180, 1000);
+                chassis.moveToPose(-44, -14, 180, 2000,{},false);
+                slideMotor.move_relative(-1000, 600);
+                pros::delay(1000);
+                clawMotor.move_relative(-1000, 600);
+                pros::delay(1000);
+        }
+        else if(autonNumber == 1){
+        
+        }
+        else if(autonNumber == 2){
+                
+        }
+        
 }
 
 /**
@@ -176,6 +192,7 @@ void autonomous() {
  * task, not resume it from where it left off.
  */
 void opcontrol() {
+        //clawMotor.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
 	while (true) {
 	// get left y and right x positions
                 int leftY = controller.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y);
