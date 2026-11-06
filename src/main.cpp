@@ -1,9 +1,11 @@
 #include "main.h"
 #include "lemlib/api.hpp" // IWYU pragma: keep
+#include "pros/misc.h"
 #include "pros/misc.hpp"
 
-pros::MotorGroup slideMotor({2,-11});
+pros::MotorGroup slideMotor({-2,12});
 pros::Motor clawMotor(-15);
+pros::Motor toggleMotor(1);
 int autonNumber = 0;
 pros::MotorGroup left_motors({-7,-8,-10}); // left motors on ports 1, 2, 3
 pros::MotorGroup right_motors({3, 4, 5}); // right motors on ports 4, 5, 6
@@ -119,6 +121,12 @@ void initialize() {
                                 }
                                 else{
                                         clawMotor.move(0);
+                                }
+                                if(controller.get_digital(pros::E_CONTROLLER_DIGITAL_DOWN)){
+                                        toggleMotor.move(127);
+                                }
+                                else{
+                                        toggleMotor.move(0);
                                 }
                         }
                         pros::delay(20);
