@@ -5,20 +5,23 @@
 
 pros::MotorGroup slideMotor({-2,12});
 pros::Motor clawMotor(-15);
-pros::Motor toggleMotor(1);
-int autonNumber = 0;
+pros::Motor toggleMotor(-6);
+int autonNumber = 1;
 pros::MotorGroup left_motors({-7,-8,-10}); // left motors on ports 1, 2, 3
 pros::MotorGroup right_motors({3, 4, 5}); // right motors on ports 4, 5, 6
 pros::Controller controller(pros::E_CONTROLLER_MASTER);
 lemlib::Drivetrain drivetrain(&left_motors, // left motor group
                               &right_motors, // right motor group
-                              10.9375, // 10 inch track width
+                              10.5375, // 10 inch track width
                               lemlib::Omniwheel::NEW_325, // using new 3.25" omnis
                               360, // drivetrain rpm is 360
                               2 // horizontal drift is 2 (for now)
 );
 //Sensors
 pros::Imu imu(14);
+pros::Rotation vertical_encoder(20);
+// vertical tracking wheel
+lemlib::TrackingWheel vertical_tracking_wheel(&vertical_encoder, lemlib::Omniwheel::NEW_2, .5);
 lemlib::OdomSensors sensors(nullptr,//&vertical_tracking_wheel, // vertical tracking wheel 1, set to null
                             nullptr, // vertical tracking wheel 2, set to nullptr as we are using IMEs
                             nullptr,//&horizontal_tracking_wheel, // horizontal tracking wheel 1
@@ -38,13 +41,13 @@ lemlib::ControllerSettings lateral_controller(10, // proportional gain (kP)
 );
 
 // angular PID controller
-lemlib::ControllerSettings angular_controller(2, // proportional gain (kP)
-                                              0, // integral gain (kI)
+lemlib::ControllerSettings angular_controller(2.1, // proportional gain (kP)
+                                              0.2, // integral gain (kI)
                                               10, // derivative gain (kD)
-                                              3, // anti windup
-                                              1, // small error range, in degrees
-                                              100, // small error range timeout, in milliseconds
-                                              3, // large error range, in degrees
+                                              10, // anti windup
+                                              .10, // small error range, in degrees
+                                              200, // small error range timeout, in milliseconds
+                                              .500, // large error range, in degrees
                                               500, // large error range timeout, in milliseconds
                                               0 // maximum acceleration (slew)
 );
@@ -99,6 +102,16 @@ void initialize() {
         chassis.calibrate();
 	pros::lcd::set_text(1, "Hello PROS User!");
 	pros::lcd::register_btn1_cb(on_center_button);
+        pros::Task screen_task([&]() {
+                while (1) {
+                        // print robot location to the brain screen
+                        pros::lcd::print(0, "X: %f", chassis.getPose().x); // x
+                        pros::lcd::print(1, "Y: %f", chassis.getPose().y); // y
+                        pros::lcd::print(2, "Theta: %f", chassis.getPose().theta); // heading
+                        // delay to save resources
+                        pros::delay(20);
+                }
+        });
         pros:: Task slides([&]() {
                 while(1){
                         if(!pros::competition::is_autonomous()){
@@ -166,6 +179,7 @@ void competition_initialize() {}
 void autonomous() {
         if(autonNumber == 0){
                 chassis.setPose(-62, -7, 90);
+                toggleMotor.move_relative(1000, 600);
                 clawMotor.move_relative(10000, 600);
                 chassis.moveToPose(-44, -7, 90, 2000);
                 slideMotor.move_relative(10000, 600);
@@ -178,7 +192,8 @@ void autonomous() {
                 pros::delay(1000);
         }
         else if(autonNumber == 1){
-        
+                chassis.setPose(0,0,0);
+                chassis.turnToHeading(90, 15000);
         }
         else if(autonNumber == 2){
                 
