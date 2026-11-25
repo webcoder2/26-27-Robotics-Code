@@ -1,12 +1,14 @@
 #include "main.h"
 #include "lemlib/api.hpp" // IWYU pragma: keep
+#include "pros/distance.hpp"
 #include "pros/misc.h"
 #include "pros/misc.hpp"
 
 pros::MotorGroup slideMotor({-2,12});
 pros::Motor clawMotor(-15);
 pros::Motor toggleMotor(-6);
-int autonNumber = 0;
+int autonNumber = 1;
+pros::Distance backSensor(19);
 pros::MotorGroup left_motors({-7,-8,-10}); // left motors on ports 1, 2, 3
 pros::MotorGroup right_motors({3, 4, 5}); // right motors on ports 4, 5, 6
 pros::Controller controller(pros::E_CONTROLLER_MASTER);
@@ -41,10 +43,10 @@ lemlib::ControllerSettings lateral_controller(10, // proportional gain (kP)
 );
 
 // angular PID controller
-lemlib::ControllerSettings angular_controller(1.4, // proportional gain (kP)
-                                              0.1, // integral gain (kI)
-                                              12, // derivative gain (kD)
-                                              50, // anti windup
+lemlib::ControllerSettings angular_controller(1.8, // proportional gain (kP)
+                                              0.07, // integral gain (kI)
+                                              11.75, // derivative gain (kD)
+                                              5, // anti windup
                                               .10, // small error range, in degrees
                                               200, // small error range timeout, in milliseconds
                                               .500, // large error range, in degrees
@@ -180,37 +182,83 @@ void autonomous() {
         if(autonNumber == 0){
                 chassis.setPose(-63, -4, 90);
                 toggleMotor.move_relative(2000, 600);
-                //clawMotor.move_relative(10000, 600);
+                //clawMotor.move_relative(1000, 600);
                 pros::delay(1000);
-                chassis.moveToPose(-48, -4, 90, 1250,{.lead=0},false);
+                chassis.moveToPose(-48, -4, 90, 1000,{.lead=0},false);
                 slideMotor.move_relative(1400, 600);
                 //pros::delay(1000);
-                chassis.turnToHeading(180, 1000);
-                chassis.moveToPose(-48, -20, 180, 2000,{},false);
+                chassis.turnToHeading(180, 900);
+                chassis.moveToPose(-48, -20, 180, 1500,{},false);
                 chassis.setPose(-48, -15, 180);
                 slideMotor.move_relative(-1000, 600);
                 pros::delay(1000);
                 clawMotor.move_relative(-1000, 600);
                 pros::delay(500);
-                chassis.moveToPose(-48, -6, 180, 2000,{.forwards=false},false);
+                chassis.moveToPose(-48, -6, 180, 1200,{.forwards=false},false);
                 chassis.turnToHeading(125, 1000);
                 slideMotor.move_relative(-400, 600);
-                clawMotor.move_relative(10000, 600);
-                chassis.moveToPose(-30, -19, 125, 2000,{.maxSpeed=45},false);
+                clawMotor.move_relative(15000, 600);
+                chassis.moveToPose(-30, -19, 125, 2000,{.maxSpeed=40},false);
                 //chassis.moveToPose(-24, -24, 125, 2000,{.maxSpeed=30},false);
+                slideMotor.move_relative(2000, 600);
                 chassis.turnToHeading(265, 1200,{},false);
-                slideMotor.move_relative(-2500, 600);
-                chassis.moveToPose(-48, -23.5, 265, 2000,{.lead=0,.minSpeed=30},false);
+                chassis.moveToPose(-48, -23.5, 265, 1500,{.lead=0},false);
+                slideMotor.move_relative(-1000, 600);
                 clawMotor.move_relative(-1000, 600);
-
-
-
+                pros::delay(1000);
+                chassis.moveToPose(-30, -19, 265, 1250,{.forwards=false,.minSpeed=45},false);
         }
-        else if(autonNumber == 1){
+        else if(autonNumber== 1){
+               chassis.setPose(-63, -4, 90);
+                toggleMotor.move_relative(2000, 600);
+                //clawMotor.move_relative(1000, 600);
+                pros::delay(1000);
+                chassis.moveToPose(-48, -4, 90, 1000,{.lead=0},false);
+                slideMotor.move_relative(1400, 600);
+                //pros::delay(1000);
+                chassis.turnToHeading(180, 900);
+                chassis.moveToPose(-48, -20, 180, 1500,{},false);
+                //chassis.setPose(-48, -15, chassis.getPose().theta);
+                slideMotor.move_relative(-1000, 600);
+                pros::delay(1000);
+                clawMotor.move_relative(-1000, 600);
+                pros::delay(500);
+                chassis.moveToPose(-48, -6, 180, 1200,{.forwards=false},false);
+                chassis.turnToHeading(127, 1000);
+                slideMotor.move_relative(-400, 600);
+                clawMotor.move_relative(15000, 600);
+                chassis.moveToPose(-30, -19, 127, 2000,{.maxSpeed=40},false);
+                //chassis.moveToPose(-24, -24, 125, 2000,{.maxSpeed=30},false);
+                slideMotor.move_relative(2000, 600);
+                chassis.turnToHeading(265, 1200,{},false);
+                chassis.moveToPose(-46, -23.5, 265, 1500,{.lead=0},false);
+                
+                slideMotor.move_relative(-1000, 600);
+                clawMotor.move_relative(-1000, 600);
+                pros::delay(1000);
+                chassis.moveToPose(-24, -24, 225, 1500,{.forwards=false,.lead=0},false); 
+                slideMotor.move_relative(-1000,600);
+                clawMotor.move_relative(9000, 600);
+                chassis.moveToPose(-36, -36, 225, 1000,{.minSpeed=45});
+                chassis.moveToPose(-45, -45, 225, 1500,{.maxSpeed=50},false);
+                slideMotor.move_relative(3000,600);
+                chassis.turnToHeading(350, 1000);
+                chassis.moveToPose(-47, -27,0, 1500,{.lead=0},false);
+                slideMotor.move_relative(-1500, 600);
+                clawMotor.move_relative(-1000, 600);
+                pros::delay(1000);
+                slideMotor.move_relative(-1500, 600);
+                chassis.moveToPose(-48, -60, 0, 2000,{.forwards=false},false);
+                
+                chassis.setPose(chassis.getPose().x,(backSensor.get_distance()/25.4)-64.48,chassis.getPose().theta);
+                chassis.moveToPose(-48, -60, 0, 750,{},false);
+                chassis.turnToHeading(270, 1000);
+        }
+        else if(autonNumber == 2){
                 chassis.setPose(0,0,0);
                 chassis.turnToHeading(90, 15000);
         }
-        else if(autonNumber == 2){
+        else if(autonNumber == 3){
                 chassis.setPose(0,0,0);
                 chassis.moveToPose(0, 48, 0, 15000);
         }
